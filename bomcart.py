@@ -5,15 +5,23 @@ from selenium.webdriver.common.keys import Keys
 import numpy
 from numpy import genfromtxt
 
-import tkinter
+import tkinter as tk
 from tkinter import filedialog
-from filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename
 
 # Define the CSS selectors for the input boxes (could change in time)
 MPN_BOX_CSS		 	= "input[name$='Main$txt1']"		# Manufacturer P/N
 NPN_BOX_CSS			= "input[name$='Main$txt2']"		# Internal P/N
 QTY_BOX_CSS			= "input[name$='Main$txt3']"		# Quantity
 ADD_BTN_CSS			= "input[name$='Main$btn1']"		# Add button
+
+# Get BoM file and QTY of boards to order
+root_window = tk.Tk()
+root_window.withdraw()
+bomfile = askopenfilename(title="Choose a Bill of Materials File")
+with open(bomfile) as bom:
+	data = [line.split('\t') for line in bom]
+board_qty = int(input("How many boards are we ordering? "))
 
 # Open a Firefox instance and direct to Mouser
 browser = web.Firefox()
@@ -40,14 +48,15 @@ def AddToCart():
 # Allow up to 10 seconds to find an element on the page before timing out
 browser.implicitly_wait(10)
 
-root_window = tk.Tk()
-root_window.withdraw()
-bomfile = askopenfilename(title="Choose a Bill of Materials File")
-with open(bomfile) as bom:
-	data = [line.split('\t') for line in bom]
+header = data[0]
+mpn_index = header.index('Mouser')
+qty_index = header.index('QTY\n')
 
-for i in range(0,10):
-	EnterMPN('71-CRCW1206-0-E3')
-	EnterNPN('Resistor 0603')
-	EnterQTY('50')
-	AddToCart()
+for part in data:
+	if(part[mpn_index] and part[mpn_index] != 'Mouser'):
+		EnterMPN(part[mpn_index])
+		EnterNPN('')
+		qty = int(part[qty_index])
+		qty *= board_qty
+		EnterQTY(str(qty))
+		AddToCart()
