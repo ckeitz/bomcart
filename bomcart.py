@@ -5,11 +5,21 @@ from selenium.webdriver.common.keys import Keys
 import numpy
 from numpy import genfromtxt
 
-BoM = genfromtxt()
+import tkinter
+from tkinter import filedialog
+from filedialog import askopenfilename
 
+# Define the CSS selectors for the input boxes (could change in time)
+MPN_BOX_CSS		 	= "input[name$='Main$txt1']"		# Manufacturer P/N
+NPN_BOX_CSS			= "input[name$='Main$txt2']"		# Internal P/N
+QTY_BOX_CSS			= "input[name$='Main$txt3']"		# Quantity
+ADD_BTN_CSS			= "input[name$='Main$btn1']"		# Add button
+
+# Open a Firefox instance and direct to Mouser
 browser = web.Firefox()
 browser.get('http://www.mouser.com/Cart/Cart.aspx')
 
+# Form interactions
 def EnterMPN(mpn_string):
 	elem = browser.find_element_by_css_selector(MPN_BOX_CSS)
 	elem.send_keys(mpn_string)
@@ -27,16 +37,17 @@ def AddToCart():
 	elem = browser.find_element_by_css_selector(ADD_BTN_CSS)
 	elem.send_keys(Keys.RETURN)
 
-# Define the CSS selectors for the input boxes (could change in time)
-MPN_BOX_CSS		 	= "input[name$='Main$txt1']"		# Manufacturer P/N
-NPN_BOX_CSS			= "input[name$='Main$txt2']"		# Internal P/N
-QTY_BOX_CSS			= "input[name$='Main$txt3']"		# Quantity
-ADD_BTN_CSS			= "input[name$='Main$btn1']"		# Add button
-
 # Allow up to 10 seconds to find an element on the page before timing out
 browser.implicitly_wait(10)
 
-EnterMPN('71-CRCW1206-0-E3')
-EnterNPN('Resistor 0603')
-EnterQTY('50')
-AddToCart()
+root_window = tk.Tk()
+root_window.withdraw()
+bomfile = askopenfilename(title="Choose a Bill of Materials File")
+with open(bomfile) as bom:
+	data = [line.split('\t') for line in bom]
+
+for i in range(0,10):
+	EnterMPN('71-CRCW1206-0-E3')
+	EnterNPN('Resistor 0603')
+	EnterQTY('50')
+	AddToCart()
